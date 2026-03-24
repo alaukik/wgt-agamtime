@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WGT AgamTime</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f5f6fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .button {
+      width: 100%;
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      background: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>AgamTime</h2>
+
+<div class="card">
+  <p id="user">Loading user...</p>
+</div>
+
+<div class="card">
+  <p id="location">Detecting location...</p>
+</div>
+
+<div class="card">
+  <button class="button">CHECK IN</button>
+</div>
+
+<div class="card">
+  <h3>Last Logs</h3>
+  <div id="logs">No data yet</div>
+</div>
+
+</body>
+</html>
