@@ -1,184 +1,802 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>WGT AgamTime</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080808">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>WGT AgamTime</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#080808;font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased}
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #f5f6fa;
-      margin: 0;
-      padding: 20px;
-    }
+:root{
+  --green:#00C781;--green-dim:rgba(0,199,129,0.12);--green-glow:rgba(0,199,129,0.2);
+  --red:#FF5C5C;--red-dim:rgba(255,92,92,0.12);
+  --amber:#FFB347;
+  --bg:#080808;--s1:#111;--s2:#181818;--s3:#222;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#F0F0F0;--muted:#777;--dim:#444;
+  --mono:'DM Mono',monospace;
+}
 
-    h2 {
-      text-align: center;
-    }
+/* ── SCREENS ── */
+.screen{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:32px 24px;
+  opacity:0;pointer-events:none;transition:opacity 0.35s ease;overflow-y:auto;
+}
+.screen.active{opacity:1;pointer-events:all}
 
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
+/* ── LOADING ── */
+#s-loading{background:var(--bg);gap:20px}
+.spinner{
+  width:34px;height:34px;border:2px solid var(--border2);
+  border-top-color:var(--green);border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:3px}
 
-    .button {
-      width: 100%;
-      padding: 15px;
-      border-radius: 10px;
-      border: none;
-      font-size: 16px;
-      background: #28a745;
-      color: white;
-      cursor: pointer;
-    }
+/* ── LOGIN ── */
+#s-login{background:var(--bg)}
+.login-glow{
+  position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,199,129,0.09),transparent);
+}
+.login-content{position:relative;z-index:1;width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center}
 
-    .button:disabled {
-      background: grey;
-    }
+.login-mark{
+  width:76px;height:76px;border-radius:20px;
+  background:var(--s1);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:24px;position:relative;overflow:hidden;
+}
+.login-mark::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 35% 30%,rgba(0,199,129,0.18),transparent 65%);
+}
 
-    .center {
-      text-align: center;
-      margin-top: 50px;
-    }
+.login-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--green);text-transform:uppercase;margin-bottom:8px}
+.login-title{font-size:34px;font-weight:800;color:var(--text);letter-spacing:-0.5px;text-align:center;margin-bottom:10px;line-height:1.05}
+.login-sub{font-size:13px;color:var(--muted);text-align:center;line-height:1.65;margin-bottom:40px;font-weight:400;max-width:260px}
+.google-btn-wrap{width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+#google-signin-btn{width:100%}
+.login-fine{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;line-height:1.7}
 
-    .hidden {
-      display: none;
-    }
-  </style>
+/* ── MAIN ── */
+#s-main{
+  justify-content:flex-start;
+  padding-top:max(env(safe-area-inset-top,0px),28px);
+  padding-bottom:max(env(safe-area-inset-bottom,0px),24px);
+}
+.main-inner{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center}
+
+/* Header */
+.header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.header-brand{font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:var(--green);text-transform:uppercase}
+.avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--s2);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--green);
+  cursor:pointer;overflow:hidden;
+}
+.avatar img{width:100%;height:100%;object-fit:cover}
+
+/* Greeting */
+.greeting{width:100%;margin-bottom:16px}
+.greeting-hi{font-size:13px;color:var(--muted);font-weight:400}
+.greeting-name{font-size:26px;font-weight:700;color:var(--text);letter-spacing:-0.3px;line-height:1.2}
+
+/* No QR banner */
+.no-qr-banner{
+  width:100%;background:rgba(255,179,71,0.07);border:1px solid rgba(255,179,71,0.22);
+  border-radius:12px;padding:11px 14px;margin-bottom:14px;
+  align-items:flex-start;gap:9px;display:none;
+}
+.no-qr-banner.show{display:flex}
+.no-qr-text{font-size:11px;color:var(--amber);line-height:1.55;font-family:var(--mono)}
+
+/* Manual dropdown */
+.loc-select-wrap{width:100%;margin-bottom:14px;display:none}
+.loc-select-wrap.show{display:block}
+.loc-select{
+  width:100%;background:var(--s1);border:1px solid var(--border2);
+  border-radius:12px;padding:12px 16px;color:var(--text);
+  font-family:var(--mono);font-size:13px;outline:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center;
+}
+.loc-select option{background:#181818}
+
+/* Location bar */
+.loc-bar{
+  width:100%;background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:13px 16px;
+  display:flex;align-items:center;gap:10px;margin-bottom:32px;
+  transition:border-color 0.3s,background 0.3s;
+}
+.loc-bar.verified{border-color:rgba(0,199,129,0.28);background:rgba(0,199,129,0.05)}
+.loc-bar.error{border-color:rgba(255,92,92,0.28);background:rgba(255,92,92,0.04)}
+.loc-bar.detecting{border-color:rgba(255,179,71,0.28);background:rgba(255,179,71,0.04)}
+
+.loc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background 0.3s}
+.loc-dot.green{background:var(--green);box-shadow:0 0 0 3px rgba(0,199,129,0.18)}
+.loc-dot.red{background:var(--red)}
+.loc-dot.amber{background:var(--amber);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}}
+
+.loc-info{flex:1;min-width:0}
+.loc-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loc-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+
+/* ── LOG TIME BUTTON ── */
+.btn-zone{width:100%;display:flex;justify-content:center;margin-bottom:32px}
+.log-btn{
+  width:184px;height:184px;border-radius:50%;
+  border:none;cursor:pointer;outline:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;position:relative;
+  transition:transform 0.12s ease;
+}
+.log-btn:active:not(:disabled){transform:scale(0.93)}
+.log-btn:disabled{cursor:not-allowed}
+
+.log-btn::before{content:'';position:absolute;inset:-6px;border-radius:50%;border:1.5px solid;transition:border-color 0.3s}
+.log-btn::after{content:'';position:absolute;inset:-14px;border-radius:50%;border:1px solid;opacity:0.28;transition:border-color 0.3s}
+
+.log-btn.checkin{background:rgba(0,199,129,0.1)}
+.log-btn.checkout{background:rgba(255,92,92,0.1)}
+.log-btn.loading,.log-btn.blocked,.log-btn.cooldown{background:var(--s2)}
+
+.log-btn.checkin::before{border-color:var(--green)}
+.log-btn.checkout::before{border-color:var(--red)}
+.log-btn.cooldown::before{border-color:var(--amber)}
+.log-btn.loading::before,.log-btn.blocked::before{border-color:var(--border2)}
+
+.log-btn.checkin::after{border-color:var(--green)}
+.log-btn.checkout::after{border-color:var(--red)}
+.log-btn.cooldown::after{border-color:var(--amber)}
+.log-btn.loading::after,.log-btn.blocked::after{border-color:var(--border);opacity:0.12}
+
+.btn-icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center}
+.btn-label{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase}
+.log-btn.checkin .btn-label{color:var(--green)}
+.log-btn.checkout .btn-label{color:var(--red)}
+.log-btn.cooldown .btn-label{color:var(--amber)}
+.log-btn.loading .btn-label,.log-btn.blocked .btn-label{color:var(--dim)}
+.btn-sub{font-family:var(--mono);font-size:10px;color:var(--dim)}
+
+/* ── SESSION HISTORY ── */
+.history{width:100%;padding-bottom:32px}
+.history-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:12px}
+.sessions{display:flex;flex-direction:column;gap:10px}
+.history-empty{text-align:center;padding:28px 0;font-size:12px;color:var(--dim);font-family:var(--mono)}
+
+.session-card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px;
+  animation:fadeUp 0.3s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.session-card.active-session{border-color:rgba(0,199,129,0.22);background:rgba(0,199,129,0.04)}
+
+.session-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.session-location{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+
+.session-badge{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:20px;flex-shrink:0;letter-spacing:0.5px;text-transform:uppercase}
+.badge-active{background:rgba(0,199,129,0.15);color:var(--green)}
+.badge-manual{background:var(--s3);color:var(--muted)}
+.badge-auto-9pm{background:rgba(255,179,71,0.12);color:var(--amber)}
+.badge-auto-new{background:rgba(255,92,92,0.12);color:var(--red)}
+
+.session-times{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.time-block{display:flex;flex-direction:column;gap:3px}
+.time-label{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.time-val{font-size:12px;font-weight:500;color:var(--text);font-family:var(--mono)}
+.time-val.green{color:var(--green)}
+.time-val.muted{color:var(--muted)}
+
+.session-dur{
+  display:flex;align-items:center;gap:6px;
+  padding-top:8px;border-top:1px solid var(--border);
+}
+.dur-text{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* ── SUCCESS ── */
+#s-success{gap:0}
+.success-ring{
+  width:92px;height:92px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:24px;position:relative;
+}
+.success-ring::before{content:'';position:absolute;inset:-10px;border-radius:50%;border:1px solid;opacity:0.22}
+.success-ring.in{background:rgba(0,199,129,0.1);border:2px solid var(--green)}
+.success-ring.out{background:rgba(255,92,92,0.1);border:2px solid var(--red)}
+.success-ring.in::before{border-color:var(--green)}
+.success-ring.out::before{border-color:var(--red)}
+
+.success-status{font-size:30px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-0.5px}
+.success-loc{font-size:16px;font-weight:600;margin-bottom:6px}
+.success-loc.in{color:var(--green)}
+.success-loc.out{color:var(--red)}
+.success-time{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:4px}
+.success-email{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:32px}
+.success-note{display:flex;align-items:center;gap:7px;margin-bottom:36px;font-family:var(--mono);font-size:11px;color:var(--green)}
+.check-dot{width:16px;height:16px;border-radius:50%;background:rgba(0,199,129,0.15);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.back-btn{
+  background:var(--s1);border:1px solid var(--border2);
+  border-radius:12px;padding:14px 44px;
+  color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;
+}
+.back-btn:active{background:var(--s2)}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:32px;left:50%;
+  transform:translateX(-50%) translateY(14px);
+  background:var(--s2);border:1px solid var(--border2);
+  border-radius:10px;padding:10px 20px;
+  font-family:var(--mono);font-size:12px;color:var(--text);
+  white-space:nowrap;opacity:0;pointer-events:none;
+  transition:opacity 0.25s,transform 0.25s;
+  z-index:999;max-width:88vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:rgba(255,92,92,0.4);color:var(--red)}
+#toast.ok{border-color:rgba(0,199,129,0.4);color:var(--green)}
+</style>
 </head>
-
 <body>
 
-<h2>AgamTime</h2>
-
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="center">
-  <div id="loginDiv"></div>
+<!-- LOADING -->
+<div class="screen active" id="s-loading">
+  <div class="spinner"></div>
+  <div class="loading-text">AGAMTIME</div>
 </div>
 
-<!-- MAIN APP -->
-<div id="appScreen" class="hidden">
-
-  <!-- User -->
-  <div class="card">
-    <p id="user"></p>
+<!-- LOGIN -->
+<div class="screen" id="s-login">
+  <div class="login-glow"></div>
+  <div class="login-content">
+    <div class="login-mark">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" style="position:relative;z-index:1">
+        <circle cx="19" cy="19" r="14" stroke="#00C781" stroke-width="1.8"/>
+        <path d="M19 12v7l4.5 2.5" stroke="#00C781" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="19" cy="19" r="2.2" fill="#00C781"/>
+        <circle cx="29" cy="27" r="5" fill="#080808" stroke="#00C781" stroke-width="1.5"/>
+        <path d="M29 24.5v2.5l1.5 1" stroke="#00C781" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="login-eyebrow">Agamedu</div>
+    <div class="login-title">WGT<br>AgamTime</div>
+    <div class="login-sub">Sign in to track your attendance across all WGT centers</div>
+    <div class="google-btn-wrap">
+      <div id="google-signin-btn"></div>
+      <div class="login-fine">Your Gmail identifies you on every entry<br>We only access your name and email</div>
+    </div>
   </div>
-
-  <!-- Location -->
-  <div class="card">
-    <p id="location">Detecting location...</p>
-    <p id="status"></p>
-  </div>
-
-  <!-- Button -->
-  <div class="card">
-    <button id="logBtn" class="button" disabled>Loading...</button>
-  </div>
-
-  <!-- Logs -->
-  <div class="card">
-    <h3>Last Logs</h3>
-    <div id="logs">No data yet</div>
-  </div>
-
 </div>
+
+<!-- MAIN -->
+<div class="screen" id="s-main">
+  <div class="main-inner">
+
+    <div class="header">
+      <div class="header-brand">WGT · AgamTime</div>
+      <div class="avatar" id="userAvatar" onclick="confirmSignOut()">
+        <span id="userInitials">?</span>
+      </div>
+    </div>
+
+    <div class="greeting">
+      <div class="greeting-hi">Hello,</div>
+      <div class="greeting-name" id="userName">—</div>
+    </div>
+
+    <!-- No QR warning -->
+    <div class="no-qr-banner" id="noQrBanner">
+      <div class="no-qr-text">⚠ No QR scanned. Select your center below or scan the QR code at the location.</div>
+    </div>
+
+    <!-- Manual location select (when no QR) -->
+    <div class="loc-select-wrap" id="locSelectWrap">
+      <select class="loc-select" id="locSelect" onchange="onManualSelect()">
+        <option value="">— Select your center —</option>
+      </select>
+    </div>
+
+    <!-- Location bar -->
+    <div class="loc-bar detecting" id="locBar">
+      <div class="loc-dot amber" id="locDot"></div>
+      <div class="loc-info">
+        <div class="loc-name" id="locName">Detecting location…</div>
+        <div class="loc-sub"  id="locSub">Please wait</div>
+      </div>
+    </div>
+
+    <!-- The Button -->
+    <div class="btn-zone">
+      <button class="log-btn loading" id="logBtn" onclick="handleTap()" disabled>
+        <div class="btn-icon" id="btnIcon"><div class="spinner"></div></div>
+        <div class="btn-label" id="btnLabel">—</div>
+        <div class="btn-sub"   id="btnSub">loading</div>
+      </button>
+    </div>
+
+    <!-- Sessions -->
+    <div class="history">
+      <div class="history-label">Recent Sessions</div>
+      <div class="sessions" id="sessionList">
+        <div class="history-empty">Loading…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="screen" id="s-success">
+  <div class="success-ring" id="successRing"></div>
+  <div class="success-status" id="successStatus">Checked In</div>
+  <div class="success-loc"    id="successLoc">—</div>
+  <div class="success-time"   id="successTime">—</div>
+  <div class="success-email"  id="successEmail">—</div>
+  <div class="success-note">
+    <div class="check-dot">
+      <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+        <path d="M1 3l2 2 4-4" stroke="#00C781" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Logged to Google Sheet
+  </div>
+  <button class="back-btn" onclick="goToMain()">Back to Home</button>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script>
-  let userName = "";
-  let userEmail = "";
-  let userLat = null;
-  let userLng = null;
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+var CLIENT_ID  = '634394989255-nobqqpqf608oakjeoo8f3pkrfftebsh9.apps.googleusercontent.com';
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzImBlN2HXRF3oc5QBJ6JCF96Z6hxlEnNMBLbCQaEqLcT_S18bhaC2F2IYFPzwymrYi/exec';
+var COOLDOWN   = 30;
 
-  // ======================
-  // LOGIN HANDLER
-  // ======================
-  function handleCredentialResponse(response) {
-    const data = parseJwt(response.credential);
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+var S = {
+  user:           null,   // { email, name, picture, initials }
+  locations:      [],     // from Locations sheet
+  qrLocId:        null,   // ?loc= from URL
+  selectedLoc:    null,   // { locationId, locationName, lat, lng, radius }
+  gps:            null,   // { lat, lng }
+  gpsVerified:    false,
+  nextAction:     'CHECK-IN',
+  lastLocId:      null,
+  cooldownEnd:    0,
+  btnReady:       false,
+  cdTimer:        null
+};
 
-    userName = data.name;
-    userEmail = data.email;
+// ═══════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════
+window.onload = function() {
+  S.qrLocId = new URLSearchParams(window.location.search).get('loc');
 
-    // Switch UI
-    document.getElementById("loginScreen").classList.add("hidden");
-    document.getElementById("appScreen").classList.remove("hidden");
+  try {
+    var saved = sessionStorage.getItem('agt_user');
+    if (saved) { S.user = JSON.parse(saved); initMain(); return; }
+  } catch(e) {}
 
-    document.getElementById("user").innerText =
-      "👤 " + userName + "\n✉️ " + userEmail;
+  showScreen('login');
+  initGIS();
+};
 
-    onUserLoggedIn();
+// ═══════════════════════════════════════════
+// GOOGLE SIGN-IN
+// ═══════════════════════════════════════════
+function initGIS() {
+  google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback: onSignIn,
+    auto_select: false,
+    cancel_on_tap_outside: true
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('google-signin-btn'),
+    { theme: 'outline', size: 'large', width: 280, text: 'signin_with' }
+  );
+}
+
+function onSignIn(resp) {
+  try {
+    var p = parseJwt(resp.credential);
+    S.user = { email: p.email, name: p.name, picture: p.picture, initials: mkInitials(p.name) };
+    sessionStorage.setItem('agt_user', JSON.stringify(S.user));
+    initMain();
+  } catch(e) { toast('Sign-in failed. Try again.', 'err'); }
+}
+
+function confirmSignOut() {
+  if (!confirm('Sign out of WGT AgamTime?')) return;
+  sessionStorage.removeItem('agt_user');
+  S.user = null;
+  google.accounts.id.disableAutoSelect();
+  showScreen('login');
+  initGIS();
+}
+
+// ═══════════════════════════════════════════
+// MAIN INIT
+// ═══════════════════════════════════════════
+function initMain() {
+  showScreen('main');
+
+  // User UI
+  document.getElementById('userName').textContent    = S.user.name.split(' ')[0];
+  document.getElementById('userInitials').textContent = S.user.initials;
+  if (S.user.picture) {
+    document.getElementById('userAvatar').innerHTML =
+      '<img src="' + esc(S.user.picture) + '" alt="">';
   }
 
-  function parseJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
+  // Load in parallel then start location flow
+  Promise.all([ loadLocations(), loadLastStatus() ])
+    .then(startLocationFlow);
 
-    return JSON.parse(jsonPayload);
-  }
+  loadSessions();
+}
 
-  // ======================
-  // AFTER LOGIN
-  // ======================
-  function onUserLoggedIn() {
-    getLocation();
-  }
-
-  // ======================
-  // GPS
-  // ======================
-  function getLocation() {
-    if (!navigator.geolocation) {
-      document.getElementById("location").innerText = "GPS not supported";
-      return;
+// ═══════════════════════════════════════════
+// LOAD LOCATIONS
+// ═══════════════════════════════════════════
+function loadLocations() {
+  return api('getLocations', {}).then(function(d) {
+    if (d.success && d.locations) {
+      S.locations = d.locations;
+      var sel = document.getElementById('locSelect');
+      d.locations.forEach(function(loc) {
+        var o = document.createElement('option');
+        o.value = loc.locationId;
+        o.textContent = loc.locationName;
+        sel.appendChild(o);
+      });
     }
+  }).catch(function() { toast('Could not load centers.', 'err'); });
+}
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        userLat = position.coords.latitude;
-        userLng = position.coords.longitude;
-
-        document.getElementById("location").innerText =
-          "📍 Lat: " + userLat + ", Lng: " + userLng;
-
-        document.getElementById("status").innerText =
-          "Location captured";
-
-        const btn = document.getElementById("logBtn");
-        btn.disabled = false;
-        btn.innerText = "CHECK IN";
-      },
-      (error) => {
-        document.getElementById("location").innerText =
-          "Location error: " + error.message;
+// ═══════════════════════════════════════════
+// LOAD LAST STATUS
+// ═══════════════════════════════════════════
+function loadLastStatus() {
+  return api('lastStatus', { email: S.user.email }).then(function(d) {
+    if (d.success) {
+      S.nextAction  = d.nextAction || 'CHECK-IN';
+      S.lastLocId   = d.lastLocationId || null;
+      if (d.cooldownRemaining > 0) {
+        S.cooldownEnd = Date.now() + d.cooldownRemaining * 1000;
       }
-    );
+    }
+  }).catch(function() {});
+}
+
+// ═══════════════════════════════════════════
+// LOCATION FLOW
+// ═══════════════════════════════════════════
+function startLocationFlow() {
+  if (S.qrLocId) {
+    var loc = S.locations.find(function(l) { return l.locationId === S.qrLocId; });
+    if (!loc) {
+      setBar('error', 'Invalid QR Code', 'This center is not recognised');
+      setBtn('blocked'); return;
+    }
+    S.selectedLoc = loc;
+    setBar('detecting', loc.locationName, 'Verifying your position…');
+    getGPS();
+  } else {
+    document.getElementById('noQrBanner').classList.add('show');
+    document.getElementById('locSelectWrap').classList.add('show');
+    setBar('detecting', 'No center selected', 'Select your center above');
+    setBtn('blocked');
   }
+}
 
-  // ======================
-  // INIT
-  // ======================
-  window.onload = function () {
-    google.accounts.id.initialize({
-      client_id: "634394989255-nobqqpqf608oakjeoo8f3pkrfftebsh9.apps.googleusercontent.com",
-      callback: handleCredentialResponse
+function onManualSelect() {
+  var id = document.getElementById('locSelect').value;
+  if (!id) {
+    S.selectedLoc = null; S.gpsVerified = false;
+    setBar('detecting', 'No center selected', 'Select your center above');
+    setBtn('blocked'); return;
+  }
+  var loc = S.locations.find(function(l) { return l.locationId === id; });
+  if (!loc) return;
+  S.selectedLoc = loc; S.gpsVerified = false;
+  setBar('detecting', loc.locationName, 'Verifying your position…');
+  setBtn('blocked');
+  getGPS();
+}
+
+function getGPS() {
+  if (!navigator.geolocation) {
+    setBar('error', 'GPS Not Available', 'Your device does not support location');
+    setBtn('blocked'); return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function(pos) { onGPS(pos.coords.latitude, pos.coords.longitude); },
+    function(err) {
+      var m = err.code === 1 ? 'Location permission denied. Please allow access.'
+            : err.code === 2 ? 'Location unavailable. Try stepping outside.'
+            : 'Location timed out. Try again.';
+      setBar('error', 'GPS Failed', m);
+      setBtn('blocked');
+      toast(m, 'err');
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function onGPS(lat, lng) {
+  S.gps = { lat: lat, lng: lng };
+  if (!S.selectedLoc) { setBar('error', 'No center selected', ''); setBtn('blocked'); return; }
+
+  api('validateLocation', { loc: S.selectedLoc.locationId, lat: lat, lng: lng })
+    .then(function(d) {
+      if (d.success) {
+        S.gpsVerified = true;
+        setBar('verified', S.selectedLoc.locationName, 'Verified · ' + d.distance + 'm away');
+        activateBtn();
+      } else {
+        S.gpsVerified = false;
+        var dist = d.distance ? d.distance + 'm from center' : d.message;
+        setBar('error', 'Not at this center', dist);
+        setBtn('blocked');
+        toast('You must be at ' + S.selectedLoc.locationName + ' to log time.', 'err');
+      }
+    }).catch(function() {
+      setBar('error', 'Verification failed', 'Check your connection');
+      setBtn('blocked');
     });
+}
 
-    google.accounts.id.renderButton(
-      document.getElementById("loginDiv"),
-      { theme: "outline", size: "large" }
-    );
-  };
+// ═══════════════════════════════════════════
+// BUTTON
+// ═══════════════════════════════════════════
+function activateBtn() {
+  if (S.cooldownEnd > Date.now()) {
+    startCooldown(Math.ceil((S.cooldownEnd - Date.now()) / 1000));
+    return;
+  }
+  S.btnReady = true;
+  var btn = el('logBtn'), lbl = el('btnLabel'), sub = el('btnSub'), ico = el('btnIcon');
+  btn.disabled = false;
+  if (S.nextAction === 'CHECK-IN') {
+    btn.className = 'log-btn checkin';
+    lbl.textContent = 'CHECK IN'; sub.textContent = 'tap to log arrival';
+    ico.innerHTML = svgCheckin('#00C781');
+  } else {
+    btn.className = 'log-btn checkout';
+    lbl.textContent = 'CHECK OUT'; sub.textContent = 'tap to log departure';
+    ico.innerHTML = svgCheckout('#FF5C5C');
+  }
+}
+
+function setBtn(state) {
+  S.btnReady = false;
+  var btn = el('logBtn'), lbl = el('btnLabel'), sub = el('btnSub'), ico = el('btnIcon');
+  btn.disabled = true;
+  if (state === 'loading') {
+    btn.className = 'log-btn loading';
+    lbl.textContent = '—'; sub.textContent = 'logging…';
+    ico.innerHTML = '<div class="spinner"></div>';
+  } else {
+    btn.className = 'log-btn blocked';
+    lbl.textContent = S.nextAction === 'CHECK-IN' ? 'CHECK IN' : 'CHECK OUT';
+    sub.textContent = 'not verified';
+    ico.innerHTML = S.nextAction === 'CHECK-IN' ? svgCheckin('#444') : svgCheckout('#444');
+  }
+}
+
+function startCooldown(sec) {
+  S.btnReady = false;
+  if (S.cdTimer) clearInterval(S.cdTimer);
+  var btn = el('logBtn'), lbl = el('btnLabel'), sub = el('btnSub'), ico = el('btnIcon');
+  btn.disabled = true; btn.className = 'log-btn cooldown';
+  lbl.textContent = 'WAIT';
+  var rem = sec;
+  function tick() { sub.textContent = rem + 's'; ico.innerHTML = svgCooldown(rem); }
+  tick();
+  S.cdTimer = setInterval(function() {
+    rem--;
+    if (rem <= 0) {
+      clearInterval(S.cdTimer); S.cdTimer = null; S.cooldownEnd = 0;
+      activateBtn();
+    } else { tick(); }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════
+// TAP HANDLER
+// ═══════════════════════════════════════════
+function handleTap() {
+  if (!S.btnReady || !S.gpsVerified || !S.selectedLoc) return;
+  setBtn('loading');
+
+  api('logTime', {
+    name:         S.user.name,
+    email:        S.user.email,
+    lat:          S.gps.lat,
+    lng:          S.gps.lng,
+    loc:          S.selectedLoc.locationId,
+    locationName: S.selectedLoc.locationName,
+    verification: 'QR-GPS'
+  }).then(function(d) {
+    if (d.success) {
+      var was = S.nextAction;
+      S.nextAction  = was === 'CHECK-IN' ? 'CHECK-OUT' : 'CHECK-IN';
+      S.lastLocId   = S.selectedLoc.locationId;
+      S.cooldownEnd = Date.now() + COOLDOWN * 1000;
+      showSuccess(was, S.selectedLoc.locationName, d.time);
+      loadSessions();
+    } else if (d.cooldown) {
+      startCooldown(d.cooldown);
+      toast(d.message, 'err');
+    } else {
+      toast(d.message || 'Something went wrong.', 'err');
+      activateBtn();
+    }
+  }).catch(function() {
+    toast('Network error. Try again.', 'err');
+    activateBtn();
+  });
+}
+
+// ═══════════════════════════════════════════
+// SUCCESS
+// ═══════════════════════════════════════════
+function showSuccess(action, locName, time) {
+  var isIn = action === 'CHECK-IN';
+  var ring = el('successRing');
+  ring.className = 'success-ring ' + (isIn ? 'in' : 'out');
+  ring.innerHTML = isIn
+    ? '<svg width="38" height="38" viewBox="0 0 38 38" fill="none"><path d="M10 19l7 7 11-13" stroke="#00C781" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    : '<svg width="38" height="38" viewBox="0 0 38 38" fill="none"><path d="M12 19h14M22 13l6 6-6 6" stroke="#FF5C5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  el('successStatus').textContent = isIn ? 'Checked In'  : 'Checked Out';
+  el('successLoc').textContent    = locName;
+  el('successLoc').className      = 'success-loc ' + (isIn ? 'in' : 'out');
+  el('successTime').textContent   = time || '';
+  el('successEmail').textContent  = S.user.email;
+  showScreen('success');
+}
+
+function goToMain() {
+  showScreen('main');
+  if (S.gpsVerified) {
+    S.cooldownEnd > Date.now()
+      ? startCooldown(Math.ceil((S.cooldownEnd - Date.now()) / 1000))
+      : activateBtn();
+  }
+}
+
+// ═══════════════════════════════════════════
+// SESSIONS
+// ═══════════════════════════════════════════
+function loadSessions() {
+  api('getLastLogs', { email: S.user.email }).then(function(d) {
+    renderSessions(d.sessions || []);
+  }).catch(function() {
+    el('sessionList').innerHTML = '<div class="history-empty">Could not load sessions.</div>';
+  });
+}
+
+function renderSessions(sessions) {
+  var list = el('sessionList');
+  if (!sessions.length) {
+    list.innerHTML = '<div class="history-empty">No sessions yet. Scan QR and tap LOG TIME.</div>';
+    return;
+  }
+  list.innerHTML = sessions.map(function(s, i) {
+    var badge = s.active
+      ? '<span class="session-badge badge-active">● Active</span>'
+      : (s.checkoutReason || '').toUpperCase() === 'AUTO-9PM'
+        ? '<span class="session-badge badge-auto-9pm">Auto 9PM</span>'
+        : (s.checkoutReason || '').toUpperCase() === 'AUTO-NEW-CHECKIN'
+          ? '<span class="session-badge badge-auto-new">Auto</span>'
+          : '<span class="session-badge badge-manual">Manual</span>';
+
+    var inVal  = s.checkIn  ? '<span class="time-val green">' + esc(s.checkIn)  + '</span>'
+                            : '<span class="time-val muted">—</span>';
+    var outVal = s.checkOut ? '<span class="time-val muted">'  + esc(s.checkOut) + '</span>'
+                            : '<span class="time-val green">Active</span>';
+
+    var dur = s.duration
+      ? '<div class="session-dur"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#666" stroke-width="1.2"><circle cx="6" cy="6" r="4.5"/><path d="M6 3.5V6l1.5 1" stroke-linecap="round"/></svg><div class="dur-text">' + esc(s.duration) + '</div></div>'
+      : '';
+
+    return '<div class="session-card' + (s.active ? ' active-session' : '') + '" style="animation-delay:' + (i * 0.06) + 's">' +
+      '<div class="session-top"><div class="session-location">' + esc(s.locationName || 'Unknown') + '</div>' + badge + '</div>' +
+      '<div class="session-times">' +
+        '<div class="time-block"><div class="time-label">Check In</div>'  + inVal  + '</div>' +
+        '<div class="time-block"><div class="time-label">Check Out</div>' + outVal + '</div>' +
+      '</div>' + dur + '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function setBar(state, name, sub) {
+  el('locBar').className     = 'loc-bar ' + state;
+  el('locName').textContent  = name;
+  el('locSub').textContent   = sub || '';
+  el('locDot').className     = 'loc-dot ' + (state === 'verified' ? 'green' : state === 'error' ? 'red' : 'amber');
+}
+
+function api(action, params) {
+  var url = SCRIPT_URL + '?action=' + encodeURIComponent(action);
+  Object.keys(params).forEach(function(k) {
+    if (params[k] !== null && params[k] !== undefined && params[k] !== '') {
+      url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }
+  });
+  return fetch(url, { method: 'GET', redirect: 'follow' }).then(function(r) { return r.json(); });
+}
+
+function showScreen(n) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById('s-' + n).classList.add('active');
+}
+
+function toast(msg, type) {
+  var t = el('toast');
+  t.textContent = msg;
+  t.className   = (type === 'err' ? 'err' : type === 'ok' ? 'ok' : '') + ' show';
+  setTimeout(function() { t.className = ''; }, 3500);
+}
+
+function el(id) { return document.getElementById(id); }
+
+function parseJwt(tok) {
+  var b = tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+  return JSON.parse(decodeURIComponent(atob(b).split('').map(function(c) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join('')));
+}
+
+function mkInitials(n) { return n.split(' ').map(function(w){return w[0]}).slice(0,2).join('').toUpperCase(); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function svgCheckin(c) {
+  return '<svg width="38" height="38" viewBox="0 0 38 38" fill="none">' +
+    '<circle cx="19" cy="19" r="13" stroke="' + c + '" stroke-width="1.5" stroke-dasharray="4 2.5"/>' +
+    '<path d="M19 13v6l4 2" stroke="' + c + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="19" cy="19" r="2.5" fill="' + c + '"/>' +
+    '</svg>';
+}
+function svgCheckout(c) {
+  return '<svg width="38" height="38" viewBox="0 0 38 38" fill="none">' +
+    '<circle cx="19" cy="19" r="13" stroke="' + c + '" stroke-width="1.5"/>' +
+    '<path d="M14 19h10M20 15l4 4-4 4" stroke="' + c + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>';
+}
+function svgCooldown(sec) {
+  return '<svg width="38" height="38" viewBox="0 0 38 38" fill="none">' +
+    '<circle cx="19" cy="19" r="13" stroke="#FFB347" stroke-width="1.5"/>' +
+    '<text x="19" y="24" text-anchor="middle" font-size="13" font-weight="600" fill="#FFB347" font-family="DM Mono,monospace">' + sec + '</text>' +
+    '</svg>';
+}
 </script>
-
 </body>
 </html>
