@@ -4,6 +4,8 @@
   <title>WGT AgamTime</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <style>
     body {
       font-family: Arial;
@@ -37,12 +39,14 @@
 
 <h2>AgamTime</h2>
 
+<div id="loginDiv"></div>
+
 <div class="card">
-  <p id="user">Loading user...</p>
+  <p id="user">Not logged in</p>
 </div>
 
 <div class="card">
-  <p id="location">Detecting location...</p>
+  <p id="location">Location: Not detected</p>
 </div>
 
 <div class="card">
@@ -53,6 +57,46 @@
   <h3>Last Logs</h3>
   <div id="logs">No data yet</div>
 </div>
+
+<script>
+  let userName = "";
+  let userEmail = "";
+
+  function handleCredentialResponse(response) {
+    const data = parseJwt(response.credential);
+
+    userName = data.name;
+    userEmail = data.email;
+
+    document.getElementById("user").innerText =
+      "Logged in as: " + userName + " (" + userEmail + ")";
+  }
+
+  function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+
+    return JSON.parse(jsonPayload);
+  }
+
+  window.onload = function () {
+    google.accounts.id.initialize({
+      client_id: "634394989255-nobqqpqf608oakjeoo8f3pkrfftebsh9.apps.googleusercontent.com",
+      callback: handleCredentialResponse
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById("loginDiv"),
+      { theme: "outline", size: "large" }
+    );
+  };
+</script>
 
 </body>
 </html>
