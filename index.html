@@ -4,7 +4,6 @@
   <title>WGT AgamTime</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Google Login -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
@@ -40,12 +39,15 @@
 
     .button:disabled {
       background: grey;
-      cursor: not-allowed;
     }
 
-    .status {
-      font-weight: bold;
-      margin-top: 10px;
+    .center {
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
@@ -54,29 +56,36 @@
 
 <h2>AgamTime</h2>
 
-<!-- Login -->
-<div id="loginDiv"></div>
-
-<!-- User -->
-<div class="card">
-  <p id="user">Not logged in</p>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="center">
+  <div id="loginDiv"></div>
 </div>
 
-<!-- Location -->
-<div class="card">
-  <p id="location">Location: Not detected</p>
-  <p id="status" class="status"></p>
-</div>
+<!-- MAIN APP -->
+<div id="appScreen" class="hidden">
 
-<!-- Button -->
-<div class="card">
-  <button id="logBtn" class="button" disabled>Loading...</button>
-</div>
+  <!-- User -->
+  <div class="card">
+    <p id="user"></p>
+  </div>
 
-<!-- Logs -->
-<div class="card">
-  <h3>Last Logs</h3>
-  <div id="logs">No data yet</div>
+  <!-- Location -->
+  <div class="card">
+    <p id="location">Detecting location...</p>
+    <p id="status"></p>
+  </div>
+
+  <!-- Button -->
+  <div class="card">
+    <button id="logBtn" class="button" disabled>Loading...</button>
+  </div>
+
+  <!-- Logs -->
+  <div class="card">
+    <h3>Last Logs</h3>
+    <div id="logs">No data yet</div>
+  </div>
+
 </div>
 
 <script>
@@ -86,7 +95,7 @@
   let userLng = null;
 
   // ======================
-  // GOOGLE LOGIN
+  // LOGIN HANDLER
   // ======================
   function handleCredentialResponse(response) {
     const data = parseJwt(response.credential);
@@ -94,10 +103,12 @@
     userName = data.name;
     userEmail = data.email;
 
-    document.getElementById("user").innerText =
-      "Logged in as: " + userName + " (" + userEmail + ")";
+    // Switch UI
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("appScreen").classList.remove("hidden");
 
-    document.getElementById("loginDiv").style.display = "none";
+    document.getElementById("user").innerText =
+      "👤 " + userName + "\n✉️ " + userEmail;
 
     onUserLoggedIn();
   }
@@ -123,7 +134,7 @@
   }
 
   // ======================
-  // GPS LOCATION
+  // GPS
   // ======================
   function getLocation() {
     if (!navigator.geolocation) {
@@ -137,16 +148,14 @@
         userLng = position.coords.longitude;
 
         document.getElementById("location").innerText =
-          "Lat: " + userLat + ", Lng: " + userLng;
+          "📍 Lat: " + userLat + ", Lng: " + userLng;
 
         document.getElementById("status").innerText =
           "Location captured";
 
-        // Enable button now
         const btn = document.getElementById("logBtn");
         btn.disabled = false;
         btn.innerText = "CHECK IN";
-
       },
       (error) => {
         document.getElementById("location").innerText =
