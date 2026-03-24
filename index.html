@@ -4,6 +4,7 @@
   <title>WGT AgamTime</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Google Login -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
@@ -12,6 +13,10 @@
       background: #f5f6fa;
       margin: 0;
       padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
     }
 
     .card {
@@ -32,6 +37,16 @@
       color: white;
       cursor: pointer;
     }
+
+    .button:disabled {
+      background: grey;
+      cursor: not-allowed;
+    }
+
+    .status {
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 
@@ -39,20 +54,26 @@
 
 <h2>AgamTime</h2>
 
+<!-- Login -->
 <div id="loginDiv"></div>
 
+<!-- User -->
 <div class="card">
   <p id="user">Not logged in</p>
 </div>
 
+<!-- Location -->
 <div class="card">
   <p id="location">Location: Not detected</p>
+  <p id="status" class="status"></p>
 </div>
 
+<!-- Button -->
 <div class="card">
-  <button class="button">CHECK IN</button>
+  <button id="logBtn" class="button" disabled>Loading...</button>
 </div>
 
+<!-- Logs -->
 <div class="card">
   <h3>Last Logs</h3>
   <div id="logs">No data yet</div>
@@ -61,7 +82,12 @@
 <script>
   let userName = "";
   let userEmail = "";
+  let userLat = null;
+  let userLng = null;
 
+  // ======================
+  // GOOGLE LOGIN
+  // ======================
   function handleCredentialResponse(response) {
     const data = parseJwt(response.credential);
 
@@ -70,6 +96,10 @@
 
     document.getElementById("user").innerText =
       "Logged in as: " + userName + " (" + userEmail + ")";
+
+    document.getElementById("loginDiv").style.display = "none";
+
+    onUserLoggedIn();
   }
 
   function parseJwt(token) {
@@ -85,6 +115,49 @@
     return JSON.parse(jsonPayload);
   }
 
+  // ======================
+  // AFTER LOGIN
+  // ======================
+  function onUserLoggedIn() {
+    getLocation();
+  }
+
+  // ======================
+  // GPS LOCATION
+  // ======================
+  function getLocation() {
+    if (!navigator.geolocation) {
+      document.getElementById("location").innerText = "GPS not supported";
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+
+        document.getElementById("location").innerText =
+          "Lat: " + userLat + ", Lng: " + userLng;
+
+        document.getElementById("status").innerText =
+          "Location captured";
+
+        // Enable button now
+        const btn = document.getElementById("logBtn");
+        btn.disabled = false;
+        btn.innerText = "CHECK IN";
+
+      },
+      (error) => {
+        document.getElementById("location").innerText =
+          "Location error: " + error.message;
+      }
+    );
+  }
+
+  // ======================
+  // INIT
+  // ======================
   window.onload = function () {
     google.accounts.id.initialize({
       client_id: "634394989255-nobqqpqf608oakjeoo8f3pkrfftebsh9.apps.googleusercontent.com",
